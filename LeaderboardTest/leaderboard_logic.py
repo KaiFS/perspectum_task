@@ -16,8 +16,8 @@ SCORES_FILE_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "data", "scores.json"
 )
 
-
 def load_scores_data(path_to_file=SCORES_FILE_PATH):
+    """Attempts to load the provided SCORES.json from the given path"""
     try:
         with open(path_to_file, "r") as f:
             all_data = json.load(f)
@@ -30,7 +30,40 @@ def load_scores_data(path_to_file=SCORES_FILE_PATH):
         logging.error(f"JSON data is broken or malformed: {e}")
         return None
 
+def _is_user_eligible(number_of_submissions):
+    """Checks if the user has the minimum required
+    number of submissions"""
+    return number_of_submissions >= MIN_SUBMISSIONS
 
+def _calculate_user_score(user_submissions_list: list, user_name: str) -> int:
+    """
+    Calculates the total leaderboard score for a single user based on their submissions.
+    Only considers the top MAX_SCORES submissions.
+    """
+    all_scores_for_this_user = []
+    for user_submission_dictionary in user_submissions_list:
+        current_score = user_submission_dictionary.get("score")
+        if current_score is not None:
+            if isinstance(current_score, (int, float)):
+                all_scores_for_this_user.append(int(current_score))
+            else:
+                logging.info(f"{user_name} has a submission with a non-numeric score: '{current_score}', skipping this score.")
+        else:
+            logging.info(f"{user_name} has a submission with no score (score is None)")
+
+    # logging.debug(f"All collected scores for {user_name} BEFORE sorting: {all_scores_for_this_user}")
+
+    all_scores_for_this_user.sort(reverse=True)
+    # logging.info(f"Individual submission score list for {user_name} (sorted): {all_scores_for_this_user}")
+
+    top_scores_for_user = all_scores_for_this_user[:MAX_SCORES]
+    # logging.debug(f"Top {len(top_scores_for_user)} eligible scores for {user_name}: {top_scores_for_user}")
+    
+    total_leaderboard_score = sum(top_scores_for_user)
+    # logging.info(f"User: {user_name}, Calculated Total Score for leaderboard: {total_leaderboard_score}")
+    
+    return total_leaderboard_score
+            
 def process_final_users_for_leaderboard(all_users_data):
     final_processed_users_for_ranking = []
     # ineligible_users = []
@@ -40,66 +73,22 @@ def process_final_users_for_leaderboard(all_users_data):
         user_submissions_list = user_entry.get("submissions", [])
         number_of_submissions = len(user_submissions_list)
 
-        # CONDITION 1: We begin processing by first checking that the user has more than the minimum amount of submissions required to appear in the rankings
-        if number_of_submissions >= MIN_SUBMISSIONS:
-            logging.info(
-                f"{user_name} has {number_of_submissions} submissions, and is eligible so far"
-            )
-
-            all_scores_for_this_user = []
-
-            for user_submission_dictionary in user_submissions_list:
-                current_score = user_submission_dictionary.get("score")
-
-                if current_score is not None:  # TODO
-                    all_scores_for_this_user.append(current_score)
-                else:
-                    logging.info(f"{user_name} has a submission with no score")
-
-                # TODO - I think this is the point where I should sort the users submissions scores, order them, and then remove the lowest
-
-            # print(f"    All collected scores for {user_name} BEFORE sorting: {all_scores_for_this_user}")
-
-            all_scores_for_this_user.sort(reverse=True)
-            logging.info(
-                f"    Individual submission score list for {user_name}: {all_scores_for_this_user}"
-            )
-
-            # CONDITION 2: We need to check that only the users best 24 submissions count
-            top_scores_for_user = all_scores_for_this_user[:MAX_SCORES]
-            print(
-                f"    Top eligible total scores for {user_name}: {top_scores_for_user}"
-            )
-            logging.info(
-                f"{user_name} has {len(top_scores_for_user)} total submissions eligible"
-            )
-
-            # CONDITION 3.1: Sum the users best scores so we can sort them later
-            total_leaderboard_score = sum(top_scores_for_user)
-            logging.info(f"User: {user_name}, Total Score: {total_leaderboard_score}")
-
-            final_processed_users_for_ranking.append(
-                {"name": user_name, "leaderboard_score": total_leaderboard_score}
-            )
+        if _is_user_eligible(number_of_submissions):
+            total_leaderboard_score = _calculate_user_score(user_submissions_list, user_name)
+            final_processed_users_for_ranking.append({"name": user_name, "leaderboard_score": total_leaderboard_score})
         else:
-            logging.info(
-                f"User {user_name} isn't eligible: (Submissions < {MIN_SUBMISSIONS})"
-            )
-
+            logging.info(f"User {user_name} isn't eligible: (Submissions < {MIN_SUBMISSIONS})")
+            
     if final_processed_users_for_ranking:
-        for user_data_dict in final_processed_users_for_ranking:
-            # Condition 3.2: Sort the list of processed users by their total leaderboard_score that we calculated earlier
-            final_processed_users_for_ranking.sort(
-                key=lambda x: x["leaderboard_score"], reverse=True
-            )
-            print(
-                f"  Name: {user_data_dict['name']}, Score: {user_data_dict['leaderboard_score']}"
-            )
+        final_processed_users_for_ranking.sort(key= lambda x: x['leaderboard_score'], reverse=True)
+        logging.info("Sorted final rankings after processing")
+        for user_data_dictionary in final_processed_users_for_ranking:
+            logging.info(f"Sorted - Name: {user_data_dictionary['name']}, Score: {user_data_dictionary['leaderboard_score']}")
     else:
-        logging.warning("  No users eligible for ranking.")
-
+        logging.warning("No eligible users found")                    
+            
     return final_processed_users_for_ranking
-
+5
 
 if __name__ == "__main__":
     data = load_scores_data()
