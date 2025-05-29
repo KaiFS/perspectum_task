@@ -81,14 +81,35 @@ def process_final_users_for_leaderboard(all_users_data):
             
     if final_processed_users_for_ranking:
         final_processed_users_for_ranking.sort(key= lambda x: x['leaderboard_score'], reverse=True)
-        logging.info("Sorted final rankings after processing")
+        
+        current_rank = 0
+        last_score = float('-inf') 
         for user_data_dictionary in final_processed_users_for_ranking:
-            logging.info(f"Sorted - Name: {user_data_dictionary['name']}, Score: {user_data_dictionary['leaderboard_score']}")
+            if user_data_dictionary['leaderboard_score'] != last_score:
+                current_rank += 1
+            user_data_dictionary['display_rank'] = current_rank
+            last_score = user_data_dictionary['leaderboard_score']
+            
+            user_data_dictionary['style_class'] = ''
+            if current_rank == 1:
+                user_data_dictionary['style_class'] = 'rank-gold'
+            elif current_rank == 2:
+                user_data_dictionary['style_class'] = 'rank-silver'
+            elif current_rank == 3:
+                user_data_dictionary['style_class'] = 'rank-bronze'
+        
+        logging.info("Sorted final rankings after processing (with ranks and styles applied):")
+        for user_data_dictionary in final_processed_users_for_ranking:
+            logging.info(
+                f"Rank: {user_data_dictionary.get('display_rank', 'N/A')}, "
+                f"Name: {user_data_dictionary['name']}, "
+                f"Score: {user_data_dictionary['leaderboard_score']}, "
+                f"Class: {user_data_dictionary.get('style_class', '')}"
+            )
     else:
-        logging.warning("No eligible users found")                    
+        logging.warning("No eligible users found")                  
             
     return final_processed_users_for_ranking
-5
 
 if __name__ == "__main__":
     data = load_scores_data()
