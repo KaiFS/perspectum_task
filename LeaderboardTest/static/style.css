@@ -25,7 +25,6 @@ li {
     padding: 10px 15px;
     margin-bottom: 8px;
     border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 p {
@@ -35,21 +34,18 @@ p {
 
 li.rank-gold {
     background-color: #FFD700;
-    color: #333;
     border-color: #DAA520;
     font-weight: bold;
 }
 
 li.rank-silver {
     background-color: #C0C0C0;
-    color: #333;
     border-color: #A9A9A9;
     font-weight: bold;
 }
 
 li.rank-bronze {
     background-color: #CD7F32;
-    color: #fff;
     border-color: #A0522D;
     font-weight: bold;
 }
