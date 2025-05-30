@@ -56,7 +56,7 @@ Obviously on an actual leaderboard, this feels like a cop out, I could have used
 - **Handling errors**
 There's basic error handling implemented for loading files, and invalid/missing scores in user submissions.
 - 
-In a production environment, I wouldn't expect a perfectly formed JSON, from searching google I should probably implement some kind of JSON schema?, beyond the scope of my current experience/submission I think
+In a production environment, I wouldn't expect a perfectly formed JSON, I should probably implement some kind of JSON schema, but I feel it's beyond the scope of this project/submission for now
 
 ## Potential improvements/potential future considerations
 - Database integration? 
