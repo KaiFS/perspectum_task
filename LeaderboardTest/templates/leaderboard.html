@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Leaderboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <h1>Online Leaderboard Rankings</h1>
+
+    {% if users_to_display %}
+        <ul>
+            {% for user in users_to_display %}
+                <li class="{{ user.style_class }}">
+                    {{ user.display_rank }}. {{ user.name }} - {{ user.leaderboard_score }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users to display.</p>
+    {% endif %}
+</body>
+</html>
