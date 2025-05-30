@@ -4,24 +4,34 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
 
-
 app = Flask(__name__)
 
-PROCESSED_LEADERBOARD_DATA = []
-
-all_raw_scores_data = load_scores_data()
-if all_raw_scores_data is not None:
-    PROCESSED_LEADERBOARD_DATA = process_final_users_for_leaderboard(
-        all_raw_scores_data
-    )
-else:
-    logging.error("Couldn't load scores data at startup")
+class DataManager:
+    """Manages the dataset for this project"""
+    def __init__(self):
+        self._leaderboard_data = self._initialise_data() # Load and store on instantiation instead
+        
+    def _initialise_data(self):
+        raw_data = load_scores_data()
+        if raw_data:
+            processed_data = process_final_users_for_leaderboard(raw_data)
+            if not processed_data:
+                logging.warning("Leaderboard data was processed, but no eligible users were found")
+            else:
+                logging.info("Found and loaded the processed leaderboard data successfully")
+            return processed_data
+        logging.error("Failed to load or process the raw data for leaderboard")
+        return []
+                
+    def get_leaderboard(self):
+        return self._leaderboard_data
+                
+data_manager = DataManager()
 
 @app.route("/")
-def show_data():
-    return render_template(
-        "leaderboard.html", users_to_display=PROCESSED_LEADERBOARD_DATA
-    )
+def display_leaderboard():
+    users_to_display = data_manager.get_leaderboard()
+    return render_template("leaderboard.html", users_to_display=users_to_display)
 
 if __name__ == "__main__":
     app.run(debug=True)
